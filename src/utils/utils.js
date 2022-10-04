@@ -303,3 +303,66 @@ export const getFilteredIndustry = (data) => {
   return generateHasuraAPI(query);
 };
 
+export const createNewIndustry = (name,district) => {
+
+  const query = {
+    query : `mutation InsertIndustry($name: String = "", $latitude: Float = 0.0, $longitude: Float = 0.0, $district: String = "", $added_by_form: Boolean = true) {
+  insert_industry_one(object: {name: $name, latitude: $latitude, longitude: $longitude, district: $district, added_by_form: $added_by_form}) {
+    id
+    name
+  }
+}`,
+    "variables":{name,district}
+  };
+  return generateHasuraAPI(query);
+};
+
+export const updateDataRelativeToIndustryId  = (data,industry,a) => {
+  const obj = {
+    id:parseInt(a),
+    industry_id:industry?.id,
+    trainer_name: data.trainer_name,
+    trainer_email: data.trainer_email,
+    trainer_contact: data.trainer_contact,
+    head_name: data.head_name,
+    head_email: data.head_email,
+    head_contact: data.head_Contact,
+    sup_name: data.sup_name,
+    sup_email: data.sup_email,
+    sup_contact: data.sup_Contact
+  };
+  const query = {
+    query:`mutation MyMutation($id: bigint = "", $industry_id: Int, $trainer_name: String, $trainer_email: String, $trainer_contact: String, $head_name: String, $head_email: String, $head_contact: String, $sup_name: String, $sup_email: String, $sup_contact: String) {
+  update_dst_mc_meeting_by_pk(pk_columns: {id: $id}, _set: {industry_id: $industry_id, trainer_name: $trainer_name, trainer_email: $trainer_email, trainer_contact: $trainer_contact, head_name: $head_name, head_email: $head_email, head_contact: $head_contact, sup_name: $sup_name, sup_email: $sup_email, sup_contact: $sup_contact}) {
+    industry_id
+    id
+  }
+}`,
+    "variables": obj
+  };
+  return generateHasuraAPI(query);
+};
+
+export const updateFileUrl  = (url,a) => {
+  const obj = {
+    dst_mc_meeting_id:parseInt(a),
+    type:"FORM_UPDATE",
+    file_url:url,
+    old_data_json:{},
+    new_data_json:{}
+  };
+  const query = {
+    query:`mutation UploadDocument($dst_mc_meeting_id: bigint, $type: String, $file_url: String, $new_data_json: jsonb = "{}", $old_data_json: jsonb = "{}") {
+  insert_dst_mc_meeting_uploads_one(object: {dst_mc_meeting_id: $dst_mc_meeting_id, type: $type, file_url: $file_url, new_data_json: $new_data_json, old_data_json: $old_data_json}) {
+    id
+    dst_mc_meeting_id
+    type
+    file_url
+    created_at
+    updated_at
+  }
+}`,
+    "variables": obj
+  };
+  return generateHasuraAPI(query);
+};

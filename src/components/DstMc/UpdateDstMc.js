@@ -4,12 +4,13 @@ import Header from '../Header';
 import formSpecJSON from "./updateWorkflow.json";
 import React, { useState, useEffect } from 'react';
 import {
+  createNewIndustry,
   deleteDstMc,
   getFilteredBatch, getFilteredIndustry,
   getFilteredTrades,
   getIndustriesList,
   getITIsList,
-  getLoggedInITIDetails
+  getLoggedInITIDetails, updateDataRelativeToIndustryId, updateFileUrl
 } from "../../utils/utils";
 import withNotify from "../../redux/HOC/withNotify";
 import withLoader from "../../redux/HOC/withLoader";
@@ -26,7 +27,7 @@ const UpdateDstMc = ({ goBack, setLoader, user, setNotify }) => {
   const [filteredIndustries, setFilteredIndustries] = useState([]);
   const [selectedTrade, setSelectedTrade] = useState('');
   const [selectedFilteredIndustry, setSelectedFilteredIndustry] = useState('');
-
+const [selectedIndustry,setSelectedIndustry] = useState(null);
   const onBack = () => {
     onGoBack(goBack);
   };
@@ -37,10 +38,8 @@ const UpdateDstMc = ({ goBack, setLoader, user, setNotify }) => {
   const encodeFunction = (func) => encodeURIComponent(JSON.stringify(func));
 
 
-  const getFormURI = (form, ofsd, prefillSpec) => {
-    console.log(form, ofsd, prefillSpec);
-    return encodeURIComponent(`http://localhost:3002/prefill?form=${form}&onFormSuccessData=${encodeFunction(ofsd)}&prefillSpec=${encodeFunction(prefillSpec)}`);
-  };
+  const getFormURI = (form, ofsd, prefillSpec) =>  encodeURIComponent(`http://localhost:3002/prefill?form=${form}&onFormSuccessData=${encodeFunction(ofsd)}&prefillSpec=${encodeFunction(prefillSpec)}`);
+
 
   const startingForm = formSpec.start;
   const [formId, setFormId] = useState(startingForm);
@@ -49,8 +48,12 @@ const UpdateDstMc = ({ goBack, setLoader, user, setNotify }) => {
   const [onFormFailureData, setOnFormFailureData] = useState(undefined);
   const [encodedFormURI, setEncodedFormURI] = useState(getFormURI(formId, formSpec.forms[formId].onSuccess, formSpec.forms[formId].prefill));
 
-
-  function afterFormSubmit (e) {
+const updateFormInfo = async (updateForm,industry) => {
+  const id = localStorage.getItem("dstId");
+  await updateDataRelativeToIndustryId(updateForm,industry,id);
+  await updateFileUrl(updateForm.ex_file_widget,id);
+};
+  async function afterFormSubmit  (e) {
     const data = JSON.parse(e.data);
     try {
       /* message = {
@@ -60,7 +63,16 @@ const UpdateDstMc = ({ goBack, setLoader, user, setNotify }) => {
       */
       const { nextForm, formData, onSuccessData, onFailureData } = data;
       if(data.state == 'ON_FORM_SUCCESS_COMPLETED') {
-        console.log('formData', formData);
+        const {district3:districtName,New_Industry_Partner:industryName} = await formData?.Update_existing_DSTMC;
+
+        const existingIndustry = await industries.find(item => industryName === item?.name);
+        if(existingIndustry)  {
+          updateFormInfo(formData?.Update_existing_DSTMC,existingIndustry);
+         } else {
+          await createNewIndustry(industryName,districtName).then(res => {
+              updateFormInfo(formData?.Update_existing_DSTMC,res?.data?.insert_industry_one);
+          });
+        }
         /*const reqData = {
           id: formData.id
         };
@@ -109,6 +121,7 @@ const UpdateDstMc = ({ goBack, setLoader, user, setNotify }) => {
   const fetchIndustriesList = async () => {
     const data = await getIndustriesList();
     setIndustries(data.data.industry);
+    // console.log(data?.data?.industry,"industries");
   };
 
   const bindEventListener = () => {
@@ -150,6 +163,7 @@ const UpdateDstMc = ({ goBack, setLoader, user, setNotify }) => {
     };
     setSelectedTrade(value);
     const {data: {dst_mc_meeting}} = await getFilteredBatch(reqData);
+    localStorage.setItem("dstId",dst_mc_meeting[0].id);
     const list = dst_mc_meeting.map((item) => item.batch);
     setBatches(list);
     setFilteredIndustries([]);

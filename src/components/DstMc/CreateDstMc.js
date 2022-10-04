@@ -41,6 +41,7 @@ const CreateDstMc = ({ goBack, setLoader, user, setNotify }) => {
       }
       */
       const { nextForm, formData, onSuccessData, onFailureData } = data;
+      console.log(formData,"form data");
       if(data.state == 'ON_FORM_SUCCESS_COMPLETED') {
         let reqData = [];
         if(Array.isArray(formData.Create_DSTMC.MC_Information)) {
