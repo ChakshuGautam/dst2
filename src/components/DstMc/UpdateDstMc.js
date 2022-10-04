@@ -51,7 +51,7 @@ const [selectedIndustry,setSelectedIndustry] = useState(null);
 const updateFormInfo = async (updateForm,industry) => {
   const id = localStorage.getItem("dstId");
   await updateDataRelativeToIndustryId(updateForm,industry,id);
-  await updateFileUrl(updateForm.ex_file_widget,id);
+  await updateFileUrl(updateForm.ex_file_widget,id,"FORM_UPDATE");
 };
   async function afterFormSubmit  (e) {
     const data = JSON.parse(e.data);
