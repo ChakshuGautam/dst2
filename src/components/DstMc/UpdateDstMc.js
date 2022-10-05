@@ -39,7 +39,7 @@ const UpdateDstMc = ({ goBack, setLoader, user, setNotify }) => {
 
   const getFormURI = (form, ofsd, prefillSpec) => {
     console.log(form, ofsd, prefillSpec);
-    return encodeURIComponent(`http://localhost:3002/prefill?form=${form}&onFormSuccessData=${encodeFunction(ofsd)}&prefillSpec=${encodeFunction(prefillSpec)}`);
+    return encodeURIComponent(`${process.env.REACT_APP_GET_FORM}/prefill?form=${form}&onFormSuccessData=${encodeFunction(ofsd)}&prefillSpec=${encodeFunction(prefillSpec)}`);
   };
 
   const startingForm = formSpec.start;
@@ -179,7 +179,7 @@ const UpdateDstMc = ({ goBack, setLoader, user, setNotify }) => {
         <iframe title='current-form'
           style={{ height: "100vh", width: "100vw" }}
           src={
-            `http://localhost:8065/preview?formSpec=${encodedFormSpec}&xform=${encodedFormURI}`
+            `${process.env.REACT_APP_ENKETO}/preview?formSpec=${encodedFormSpec}&xform=${encodedFormURI}`
           }
         />
       </div>
