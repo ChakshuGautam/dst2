@@ -23,7 +23,7 @@ const CreateDstMc = ({ goBack, setLoader, user, setNotify }) => {
   const encodeFunction = (func) => encodeURIComponent(JSON.stringify(func));
 
 
-  const getFormURI = (form, ofsd, prefillSpec) => encodeURIComponent(`http://localhost:3002/prefill?form=${form}&onFormSuccessData=${encodeFunction(ofsd)}&prefillSpec=${encodeFunction(prefillSpec)}`);
+  const getFormURI = (form, ofsd, prefillSpec) => encodeURIComponent(`${process.env.REACT_APP_GET_FORM}/prefill?form=${form}&onFormSuccessData=${encodeFunction(ofsd)}&prefillSpec=${encodeFunction(prefillSpec)}`);
 
   const startingForm = formSpec.start;
   const [formId, setFormId] = useState(startingForm);
@@ -195,7 +195,7 @@ const CreateDstMc = ({ goBack, setLoader, user, setNotify }) => {
         <iframe title='current-form'
           style={{ height: "100vh", width: "100vw" }}
           src={
-            `http://localhost:8065/preview?formSpec=${encodedFormSpec}&xform=${encodedFormURI}`
+            `${process.env.REACT_APP_ENKETO}/preview?formSpec=${encodedFormSpec}&xform=${encodedFormURI}`
           }
         />
       </div>

@@ -4,12 +4,13 @@ import Header from '../Header';
 import formSpecJSON from "./cancelWorkflow.json";
 import React, { useState, useEffect } from 'react';
 import {
+  cancelDataRelativeToIndustryId, cancelDSTMC,
   deleteDstMc,
   getFilteredBatch, getFilteredIndustry,
   getFilteredTrades,
   getIndustriesList,
   getITIsList,
-  getLoggedInITIDetails
+  getLoggedInITIDetails, updateDataRelativeToIndustryId, updateFileUrl
 } from "../../utils/utils";
 import withNotify from "../../redux/HOC/withNotify";
 import withLoader from "../../redux/HOC/withLoader";
@@ -40,7 +41,7 @@ const CancelDstMc = ({ goBack, setLoader, user, setNotify }) => {
 
   const getFormURI = (form, ofsd, prefillSpec) => {
     console.log(form, ofsd, prefillSpec);
-    return encodeURIComponent(`http://localhost:3002/prefill?form=${form}&onFormSuccessData=${encodeFunction(ofsd)}&prefillSpec=${encodeFunction(prefillSpec)}`);
+    return encodeURIComponent(`${process.env.REACT_APP_GET_FORM}/prefill?form=${form}&onFormSuccessData=${encodeFunction(ofsd)}&prefillSpec=${encodeFunction(prefillSpec)}`);
   };
 
   const startingForm = formSpec.start;
@@ -51,7 +52,12 @@ const CancelDstMc = ({ goBack, setLoader, user, setNotify }) => {
   const [encodedFormURI, setEncodedFormURI] = useState(getFormURI(formId, formSpec.forms[formId].onSuccess, formSpec.forms[formId].prefill));
 
 
-  function afterFormSubmit(e) {
+  const updateFormInfo = async (updateForm) => {
+    const id = localStorage.getItem("dstId");
+   const res1 =  await cancelDSTMC(updateForm,id);
+    const res2 = await updateFileUrl(updateForm.ex_file_widget,id,"FORM_CANCEL");
+    console.log({res1,res2}, "responses");
+  };
     const data = JSON.parse(e.data);
     try {
       /* message = {
@@ -60,8 +66,8 @@ const CancelDstMc = ({ goBack, setLoader, user, setNotify }) => {
       }
       */
       const { nextForm, formData, onSuccessData, onFailureData } = data;
-      if (data.state == 'ON_FORM_SUCCESS_COMPLETED') {
-        console.log('formData', formData);
+      if(data.state == 'ON_FORM_SUCCESS_COMPLETED') {
+        updateFormInfo(formData.Cancel_DSTMC);
         /*const reqData = {
           id: formData.id
         };
@@ -153,7 +159,8 @@ const CancelDstMc = ({ goBack, setLoader, user, setNotify }) => {
       trade: value
     };
     setSelectedTrade(value);
-    const { data: { dst_mc_meeting } } = await getFilteredBatch(reqData);
+    const {data: {dst_mc_meeting}} = await getFilteredBatch(reqData);
+    localStorage.setItem("dstId",dst_mc_meeting[0].id);
     const list = dst_mc_meeting.map((item) => item.batch);
     setBatches(list);
     setFilteredIndustries([]);
@@ -217,7 +224,7 @@ const CancelDstMc = ({ goBack, setLoader, user, setNotify }) => {
             key={+new Date()}
             style={{ height: "100vh", width: "100vw" }}
             src={
-              `http://localhost:8005/preview?formSpec=${encodedFormSpec}&xform=${encodedFormURI}`
+              `${process.env.REACT_APP_ENKETO}/preview?formSpec=${encodedFormSpec}&xform=${encodedFormURI}`
             }
           />
         </div>
