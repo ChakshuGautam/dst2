@@ -3,6 +3,7 @@ import {OTP_API_URL, HTTP_BASIC_USER, HTTP_BASIC_PASS, API_KEY, HASURA_QUERY_URL
 import { store } from '../redux/store';
 import {loaderSet, notifySet, userSet} from '../redux/actions';
 import { queryString, userLogout } from '../common/globals';
+import moment from "moment"
 
 
 const validateResponse = async (response) => {
@@ -231,7 +232,7 @@ export const deleteDstMc = (data) => {
 export const getFilteredTrades = (data) => {
   const query = {
     query: `query ($iti_id: Int) {
-      dst_mc_meeting(where: {iti_id: {_eq: $iti_id}}) {
+      dst_mc_meeting(where: {iti_id: {_eq: $iti_id}, deleted_at: {_is_null: false}}) {
         id
         district
         iti_id
@@ -256,7 +257,7 @@ export const getFilteredTrades = (data) => {
 export const getFilteredBatch = (data) => {
   const query = {
     query: `query ($iti_id: Int, $trade: String) {
-      dst_mc_meeting(where: {iti_id: {_eq: $iti_id}, trade: {_eq: $trade}}) {
+      dst_mc_meeting(where: {iti_id: {_eq: $iti_id}, trade: {_eq: $trade}, deleted_at: {_is_null: false}}) {
         id
         district
         iti_id
@@ -281,7 +282,7 @@ export const getFilteredBatch = (data) => {
 export const getFilteredIndustry = (data) => {
   const query = {
     query: `query ($iti_id: Int, $trade: String, $batch: String) {
-      dst_mc_meeting(where: {iti_id: {_eq: $iti_id}, trade: {_eq: $trade}, batch: {_eq: $batch}}) {
+      dst_mc_meeting(where: {iti_id: {_eq: $iti_id}, trade: {_eq: $trade}, batch: {_eq: $batch}, deleted_at: {_is_null: false}}) {
         id
         district
         iti_id
@@ -303,3 +304,126 @@ export const getFilteredIndustry = (data) => {
   return generateHasuraAPI(query);
 };
 
+export const createNewIndustry = (name,district) => {
+
+  const query = {
+    query : `mutation InsertIndustry($name: String = "", $latitude: Float = 0.0, $longitude: Float = 0.0, $district: String = "", $added_by_form: Boolean = true) {
+  insert_industry_one(object: {name: $name, latitude: $latitude, longitude: $longitude, district: $district, added_by_form: $added_by_form}) {
+    id
+    name
+  }
+}`,
+    "variables":{name,district}
+  };
+  return generateHasuraAPI(query);
+};
+
+export const updateDataRelativeToIndustryId  = (data,industry,a) => {
+  const obj = {
+    id:parseInt(a),
+    industry_id:industry?.id,
+    trainer_name: data.trainer_name,
+    trainer_email: data.trainer_email,
+    trainer_contact: data.trainer_contact,
+    head_name: data.head_name,
+    head_email: data.head_email,
+    head_contact: data.head_Contact,
+    sup_name: data.sup_name,
+    sup_email: data.sup_email,
+    sup_contact: data.sup_Contact
+  };
+  const query = {
+    query:`mutation MyMutation($id: bigint = "", $industry_id: Int, $trainer_name: String, $trainer_email: String, $trainer_contact: String, $head_name: String, $head_email: String, $head_contact: String, $sup_name: String, $sup_email: String, $sup_contact: String) {
+  update_dst_mc_meeting_by_pk(pk_columns: {id: $id}, _set: {industry_id: $industry_id, trainer_name: $trainer_name, trainer_email: $trainer_email, trainer_contact: $trainer_contact, head_name: $head_name, head_email: $head_email, head_contact: $head_contact, sup_name: $sup_name, sup_email: $sup_email, sup_contact: $sup_contact}) {
+       industry_id
+    id
+    head_name
+    head_email
+    head_contact
+    district
+    deleted_at
+    created_at
+    batch
+    instance_id
+    iti_id
+    mc_information_count
+    mc_number
+    note
+    sup_contact
+    sup_email
+    sup_name
+    trade
+    trainer_contact
+    trainer_email
+    trainer_name
+    updated_at
+  }
+}`,
+    "variables": obj
+  };
+  return generateHasuraAPI(query);
+};
+
+export const updateFileUrl  = (url,a,t) => {
+
+  const obj = {
+    dst_mc_meeting_id:parseInt(a),
+    type:t,
+    file_url:url,
+    old_data_json:{},
+    new_data_json:{}
+  };
+  const query = {
+    query:`mutation UploadDocument($dst_mc_meeting_id: bigint, $type: String, $file_url: String, $new_data_json: jsonb = "{}", $old_data_json: jsonb = "{}") {
+  insert_dst_mc_meeting_uploads_one(object: {dst_mc_meeting_id: $dst_mc_meeting_id, type: $type, file_url: $file_url, new_data_json: $new_data_json, old_data_json: $old_data_json}) {
+    id
+    dst_mc_meeting_id
+    type
+    file_url
+    created_at
+    updated_at
+  }
+}`,
+    "variables": obj
+  };
+  return generateHasuraAPI(query);
+};
+export const cancelDSTMC  = (data,a) => {
+  const localtime = moment().format("YYYY-MM-DD h:mm:ss")
+  console.log(localtime,"localtime")
+  const obj = {
+    id:parseInt(a),
+    deleted_at:localtime
+  };
+  const query = {
+    query:`mutation MyMutation($id: bigint!, $deleted_at: timestamptz) {
+  update_dst_mc_meeting_by_pk(pk_columns: {id: $id}, _set: {deleted_at: $deleted_at}) {
+    industry_id
+    id
+    head_name
+    head_email
+    head_contact
+    district
+    deleted_at
+    created_at
+    batch
+    instance_id
+    iti_id
+    mc_information_count
+    mc_number
+    note
+    sup_contact
+    sup_email
+    sup_name
+    trade
+    trainer_contact
+    trainer_email
+    trainer_name
+    updated_at
+    deleted_at
+  }
+}`,
+    "variables": obj
+  };
+  return generateHasuraAPI(query);
+};
