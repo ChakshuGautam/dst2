@@ -41,7 +41,7 @@ const CancelDstMc = ({ goBack, setLoader, user, setNotify }) => {
 
   const getFormURI = (form, ofsd, prefillSpec) => {
     console.log(form, ofsd, prefillSpec);
-    return encodeURIComponent(`http://localhost:3002/prefill?form=${form}&onFormSuccessData=${encodeFunction(ofsd)}&prefillSpec=${encodeFunction(prefillSpec)}`);
+    return encodeURIComponent(`${process.env.REACT_APP_GET_FORM}/prefill?form=${form}&onFormSuccessData=${encodeFunction(ofsd)}&prefillSpec=${encodeFunction(prefillSpec)}`);
   };
 
   const startingForm = formSpec.start;
@@ -58,7 +58,6 @@ const CancelDstMc = ({ goBack, setLoader, user, setNotify }) => {
     const res2 = await updateFileUrl(updateForm.ex_file_widget,id,"FORM_CANCEL");
     console.log({res1,res2}, "responses");
   };
-  function afterFormSubmit (e) {
     const data = JSON.parse(e.data);
     try {
       /* message = {
@@ -95,12 +94,12 @@ const CancelDstMc = ({ goBack, setLoader, user, setNotify }) => {
   const fetchUserDetails = async () => {
     setLoader(true);
     const reqData = {
-      itiName : user?.user?.user?.username || ''
+      itiName: user?.user?.user?.username || ''
     };
-    const {data: {principal}} = await getLoggedInITIDetails(reqData);
+    const { data: { principal } } = await getLoggedInITIDetails(reqData);
     setUserDetails(principal[0]);
-    formSpec.forms[formId].prefill.district2 = "`"+`${principal[0]?.district}`+"`";
-    formSpec.forms[formId].prefill.ITI2 = "`"+`${principal[0]?.iti}`+"`";
+    formSpec.forms[formId].prefill.district2 = "`" + `${principal[0]?.district}` + "`";
+    formSpec.forms[formId].prefill.ITI2 = "`" + `${principal[0]?.iti}` + "`";
     setEncodedFormSpec(encodeURI(JSON.stringify(formSpec.forms[formId])));
     setEncodedFormURI(getFormURI(formId, formSpec.forms[formId].onSuccess, formSpec.forms[formId].prefill));
     setLoader(false);
@@ -120,9 +119,9 @@ const CancelDstMc = ({ goBack, setLoader, user, setNotify }) => {
   };
 
   const bindEventListener = () => {
-    window.removeEventListener('message', (e) => {afterFormSubmit(e);});
+    window.removeEventListener('message', (e) => { afterFormSubmit(e); });
     window.setTimeout(() => {
-      window.addEventListener('message', (e) => {afterFormSubmit(e);});
+      window.addEventListener('message', (e) => { afterFormSubmit(e); });
     }, 1500);
   };
 
@@ -149,7 +148,7 @@ const CancelDstMc = ({ goBack, setLoader, user, setNotify }) => {
     const reqData = {
       itiId: currentITI
     };
-    const {data: {dst_mc_meeting}} = await getFilteredTrades(reqData);
+    const { data: { dst_mc_meeting } } = await getFilteredTrades(reqData);
     const list = dst_mc_meeting.map((item) => item.trade);
     setTrades(list);
   };
@@ -174,7 +173,7 @@ const CancelDstMc = ({ goBack, setLoader, user, setNotify }) => {
       batch: value
     };
     setSelectedBatch(value);
-    const {data: {dst_mc_meeting}} = await getFilteredIndustry(reqData);
+    const { data: { dst_mc_meeting } } = await getFilteredIndustry(reqData);
     const list = dst_mc_meeting.map((item) => item.industry);
     setFilteredIndustries(list);
     setSelectedFilteredIndustry('');
@@ -182,9 +181,9 @@ const CancelDstMc = ({ goBack, setLoader, user, setNotify }) => {
 
   const onIndustrySelect = async (value) => {
     setSelectedFilteredIndustry(event.target.value);
-    formSpec.forms[formId].prefill.dst_trade2 = "`"+`${selectedTrade}`+"`";
-    formSpec.forms[formId].prefill.dst_batch2 = "`"+`${selectedBatch}`+"`";
-    formSpec.forms[formId].prefill.industry_partner2 = "`"+`${value}`+"`";
+    formSpec.forms[formId].prefill.dst_trade2 = "`" + `${selectedTrade}` + "`";
+    formSpec.forms[formId].prefill.dst_batch2 = "`" + `${selectedBatch}` + "`";
+    formSpec.forms[formId].prefill.industry_partner2 = "`" + `${value}` + "`";
     setEncodedFormSpec(encodeURI(JSON.stringify(formSpec.forms[formId])));
     setEncodedFormURI(getFormURI(formId, formSpec.forms[formId].onSuccess, formSpec.forms[formId].prefill));
   };
@@ -196,21 +195,11 @@ const CancelDstMc = ({ goBack, setLoader, user, setNotify }) => {
 
   return (
     <div>
-      <Header title="Cancel DST MC" onBackButton={onBack} />
-      <div className="grid grid-cols-3 gap-x-4 p-4">
+      <Header title="Create DST MC" onBackButton={onBack} />
+      <div className="text-center text-teal-700">
         <select className="form-select appearance-none px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
-                name="trade" id="trade"
-                onChange={(event) => {onTradesSelect(event.target.value);}}
-        >
-          <option value="">Select Trade</option>
-          {
-            trades && trades.length > 0 && trades.map((item) => <option key={item} value={item}>{item}</option>)
-          }
-        </select>
-
-        <select className="form-select appearance-none px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
-                name="trade" id="trade"
-                onChange={(event) => {onBatchSelect(event.target.value);}}
+          name="trade" id="trade"
+          onChange={(event) => { onBatchSelect(event.target.value); }}
         >
           <option value="">Select Batch</option>
           {
@@ -219,8 +208,8 @@ const CancelDstMc = ({ goBack, setLoader, user, setNotify }) => {
         </select>
 
         <select className="form-select appearance-none px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
-                name="filteredIndustries" id="filteredIndustries"
-                onChange={(event) => {onIndustrySelect(event.target.value);}}
+          name="filteredIndustries" id="filteredIndustries"
+          onChange={(event) => { onIndustrySelect(event.target.value); }}
         >
           <option value="">Select Industry</option>
           {
@@ -232,11 +221,11 @@ const CancelDstMc = ({ goBack, setLoader, user, setNotify }) => {
       {
         filteredIndustries && filteredIndustries.length > 0 && selectedFilteredIndustry && <div className="text-center text-teal-700">
           <iframe title='current-form'
-                  key={+new Date()}
-                  style={{ height: "100vh", width: "100vw" }}
-                  src={
-                    `http://localhost:8005/preview?formSpec=${encodedFormSpec}&xform=${encodedFormURI}`
-                  }
+            key={+new Date()}
+            style={{ height: "100vh", width: "100vw" }}
+            src={
+              `${process.env.REACT_APP_ENKETO}/preview?formSpec=${encodedFormSpec}&xform=${encodedFormURI}`
+            }
           />
         </div>
       }

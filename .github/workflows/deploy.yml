@@ -1,13 +1,12 @@
 name: Deploy pages
 on:
   push:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-
       - uses: actions/checkout@v2
 
       - name: Use Node.js 14.x
@@ -18,7 +17,7 @@ jobs:
       - name: Handle Cache
         uses: actions/cache@v2
         with:
-          path: '**/node_modules'
+          path: "**/node_modules"
           key: ${{ runner.os }}-modules-${{ hashFiles('**/package.json') }}
 
       - name: Check node version
@@ -32,7 +31,7 @@ jobs:
 
       - name: Check Build
         env:
-          REACT_APP_ENKETO: http://localhost:8005
+          REACT_APP_ENKETO: http://localhost:8065
           REACT_APP_GET_FORM: http://localhost:8080
         run: yarn build
 

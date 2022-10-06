@@ -3,7 +3,7 @@ import withGoBack from '../../redux/HOC/withGoBack';
 import Header from '../Header';
 import formSpecJSON from "./workflow.json";
 import React, { useState, useEffect } from 'react';
-import {createDstMc, getLoggedInITIDetails, getIndustriesList, getITIsList} from '../../utils/utils';
+import { createDstMc, getLoggedInITIDetails, getIndustriesList, getITIsList } from '../../utils/utils';
 import withLoader from "../../redux/HOC/withLoader";
 import withUser from "../../redux/HOC/withUser";
 import withNotify from "../../redux/HOC/withNotify";
@@ -23,7 +23,7 @@ const CreateDstMc = ({ goBack, setLoader, user, setNotify }) => {
   const encodeFunction = (func) => encodeURIComponent(JSON.stringify(func));
 
 
-  const getFormURI = (form, ofsd, prefillSpec) => encodeURIComponent(`http://localhost:3002/prefill?form=${form}&onFormSuccessData=${encodeFunction(ofsd)}&prefillSpec=${encodeFunction(prefillSpec)}`);
+  const getFormURI = (form, ofsd, prefillSpec) => encodeURIComponent(`${process.env.REACT_APP_GET_FORM}/prefill?form=${form}&onFormSuccessData=${encodeFunction(ofsd)}&prefillSpec=${encodeFunction(prefillSpec)}`);
 
   const startingForm = formSpec.start;
   const [formId, setFormId] = useState(startingForm);
@@ -32,7 +32,7 @@ const CreateDstMc = ({ goBack, setLoader, user, setNotify }) => {
   const [onFormFailureData, setOnFormFailureData] = useState(undefined);
   const [encodedFormURI, setEncodedFormURI] = useState(getFormURI(formId, formSpec.forms[formId].onSuccess, formSpec.forms[formId].prefill));
 
-  function afterFormSubmit (e) {
+  function afterFormSubmit(e) {
     const data = JSON.parse(e.data);
     try {
       /* message = {
@@ -41,13 +41,12 @@ const CreateDstMc = ({ goBack, setLoader, user, setNotify }) => {
       }
       */
       const { nextForm, formData, onSuccessData, onFailureData } = data;
-      console.log(formData,"form data");
-      if(data.state == 'ON_FORM_SUCCESS_COMPLETED') {
+      if (data.state == 'ON_FORM_SUCCESS_COMPLETED') {
         let reqData = [];
-        if(Array.isArray(formData.Create_DSTMC.MC_Information)) {
+        if (Array.isArray(formData.Create_DSTMC.MC_Information)) {
           reqData = formData.Create_DSTMC.MC_Information.map((item) => {
             const industryId = industries.find((industry) => industry.name == item.industry_partner1).id;
-            if(!industryId) {
+            if (!industryId) {
               return {};
             }
             return {
@@ -55,8 +54,8 @@ const CreateDstMc = ({ goBack, setLoader, user, setNotify }) => {
               "district": formData?.Create_DSTMC?.district1,
               "trade": formData?.Create_DSTMC?.dst_trade1,
               "batch": formData?.Create_DSTMC?.dst_batch1,
-              "note":formData?.Create_DSTMC?.note2,
-              "mc_number":formData?.Create_DSTMC?.MC_number,
+              "note": formData?.Create_DSTMC?.note2,
+              "mc_number": formData?.Create_DSTMC?.MC_number,
               "mc_information_count": formData?.Create_DSTMC?.MC_Information_count,
               "instance_id": formData?.meta?.instanceID,
               "industry_id": industryId,
@@ -72,26 +71,26 @@ const CreateDstMc = ({ goBack, setLoader, user, setNotify }) => {
             };
           });
 
-          if(currentIti && reqData.every((item) => item.iti_id)){
+          if (currentIti && reqData.every((item) => item.iti_id)) {
             createDstMc(reqData).then((res) => {
               setNotify({ message: 'Form Created Successfully', type: 'success' });
             });
-          }else {
+          } else {
             setNotify({ message: 'Can not create meeting', type: 'error' });
           }
         }
         else {
           const industryId = industries.find((industry) => industry.name == formData?.Create_DSTMC?.MC_Information.industry_partner1).id;
-          if(!industryId) {
+          if (!industryId) {
             reqData = {};
-          }else {
-            reqData= {
+          } else {
+            reqData = {
               "iti_id": currentIti,
               "district": formData?.Create_DSTMC?.district1,
               "trade": formData?.Create_DSTMC?.dst_trade1,
               "batch": formData?.Create_DSTMC?.dst_batch1,
-              "note":formData?.Create_DSTMC?.note2,
-              "mc_number":formData?.Create_DSTMC?.MC_number,
+              "note": formData?.Create_DSTMC?.note2,
+              "mc_number": formData?.Create_DSTMC?.MC_number,
               "mc_information_count": formData?.Create_DSTMC?.MC_Information_count,
               "instance_id": formData?.meta?.instanceID,
               "industry_id": industryId,
@@ -106,11 +105,11 @@ const CreateDstMc = ({ goBack, setLoader, user, setNotify }) => {
               "sup_email": formData?.Create_DSTMC?.MC_Information?.sup_email
             };
 
-            if(currentIti && reqData.iti_id){
+            if (currentIti && reqData.iti_id) {
               createDstMc(reqData).then((res) => {
                 setNotify({ message: 'Form Created Successfully', type: 'success' });
               });
-            }else {
+            } else {
               setNotify({ message: 'Can not create meeting', type: 'error' });
             }
           }
@@ -134,12 +133,12 @@ const CreateDstMc = ({ goBack, setLoader, user, setNotify }) => {
   const fetchUserDetails = async () => {
     setLoader(true);
     const reqData = {
-      itiName : user?.user?.user?.username || ''
+      itiName: user?.user?.user?.username || ''
     };
-    const {data: {principal}} = await getLoggedInITIDetails(reqData);
+    const { data: { principal } } = await getLoggedInITIDetails(reqData);
     setUserDetails(principal[0]);
-    formSpec.forms[formId].prefill.district1 = "`"+`${principal[0]?.district}`+"`";
-    formSpec.forms[formId].prefill.ITI1 = "`"+`${principal[0]?.iti}`+"`";
+    formSpec.forms[formId].prefill.district1 = "`" + `${principal[0]?.district}` + "`";
+    formSpec.forms[formId].prefill.ITI1 = "`" + `${principal[0]?.iti}` + "`";
     setEncodedFormSpec(encodeURI(JSON.stringify(formSpec.forms[formId])));
     setEncodedFormURI(getFormURI(formId, formSpec.forms[formId].onSuccess, formSpec.forms[formId].prefill));
     setLoader(false);
@@ -158,7 +157,7 @@ const CreateDstMc = ({ goBack, setLoader, user, setNotify }) => {
   };
 
   const bindEventListener = () => {
-    window.addEventListener('message', (e) => {afterFormSubmit(e);});
+    window.addEventListener('message', (e) => { afterFormSubmit(e); });
   };
 
   useEffect(() => {
@@ -170,6 +169,24 @@ const CreateDstMc = ({ goBack, setLoader, user, setNotify }) => {
     fetchUserDetails();
   }, []);
 
+  // settimeoiut after a minute
+
+  const getFormData = async () => {
+    // send broacast message to iframe
+    const iframe = document.getElementById('current-form');
+    iframe.contentWindow.postMessage('getFormData', '*');
+
+    // wait for the message from ifram and set a variable
+    window.addEventListener('message', (e) => {
+      const data = JSON.parse(e.data);
+      if (data.type === 'formData') {
+        setFormData(data.data);
+      }
+    });
+
+    return Promise.resolve("bla");
+  };
+
 
   return (
     <div>
@@ -178,7 +195,7 @@ const CreateDstMc = ({ goBack, setLoader, user, setNotify }) => {
         <iframe title='current-form'
           style={{ height: "100vh", width: "100vw" }}
           src={
-            `http://localhost:8005/preview?formSpec=${encodedFormSpec}&xform=${encodedFormURI}`
+            `${process.env.REACT_APP_ENKETO}/preview?formSpec=${encodedFormSpec}&xform=${encodedFormURI}`
           }
         />
       </div>
